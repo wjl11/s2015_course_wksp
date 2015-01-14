@@ -37,12 +37,13 @@ close(writerObj2)
 
 %% Resolution Contours
 writerObj3 = VideoWriter('resContours.avi');
-writerObj3.FrameRate = 3;
+writerObj3.FrameRate = 4;
 writerObj3
 open(writerObj3);
 
-figure(3)
+
 for i = 1:length(z_array)
+    figure(3)
     clf
     subplot(211)
     hold on
