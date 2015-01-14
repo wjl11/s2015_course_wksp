@@ -15,10 +15,12 @@ pitch=lambda/2;
 el_height=elv_focus/elv_fnum; % element height (size in y direction)
 el_width=(1-kerf_fraction)*pitch; % element width (x direction)
 el_kerf=kerf_fraction*pitch;
-n_sub_x=ceil(el_width/(lambda/2));
-n_sub_y=ceil(el_height/(lambda/2));
+n_sub_x=ceil(el_width/(lambda/4));
+n_sub_y=ceil(el_height/(lambda/4));
 
-% Create transmit and receive arrays
+
+for condition = 1:2
+    % Create transmit and receive arrays
 tx=xdc_focused_array(N_el,el_width,el_height,el_kerf,elv_focus,n_sub_x,n_sub_y,focus);
 rx=xdc_focused_array(N_el,el_width,el_height,el_kerf,elv_focus,n_sub_x,n_sub_y,focus);
 
@@ -29,8 +31,8 @@ xdc_impulse(tx,imp_resp);
 xdc_impulse(rx,imp_resp);
 
 % positions_pts=[zeros(6,2) (1:6)']*1e-2; %create point targets spaced 1 cm from 1 to 6 cm on z axis
-z_array= (10:5:80).*1e-3;
-x=(-0.6:0.01:0.6).*1e-2;
+z_array=(15:0.5:80).*1e-3;
+x=(-0.8:0.01:0.8).*1e-2;
 foc_z=elv_focus;
 
 for i = 1:length(z_array)
@@ -38,8 +40,10 @@ for i = 1:length(z_array)
     amplitude=10;
     rf=[];start=[];
     for nn=1:length(x) %sweeping beam to image
-%         xdc_center_focus(tx,[x(nn) 0 0]); % Make sure to set center first, then focus
-%         xdc_focus(tx,0,[x(nn) 0 foc_z]);
+        if condition == 1
+        xdc_center_focus(tx,[x(nn) 0 0]); % Make sure to set center first, then focus
+        xdc_focus(tx,0,[x(nn) 0 foc_z]);
+        end
         xdc_center_focus(rx,[x(nn) 0 0]);
         xdc_dynamic_focus(rx,0,0,0);
         [temp,start(nn)]=calc_scat(tx,rx,position,amplitude);
@@ -54,42 +58,154 @@ for i = 1:length(z_array)
     rf=temp_rf; clear temp_rf;
     
     env=abs(hilbert(rf)); % envelope calculation
-    env_db=20*log10(env/max(env(:))); % log scale from 0 to - infinity dB
-    z=(min_start+(1:size(env_db,1))/fs) * 1540/2; % determine z axis values
+    env_db{condition,i}=20*log10(env/max(env(:))); % log scale from 0 to - infinity dB
+    z{condition,i}=(min_start+(1:size(env_db{condition,i},1))/fs) * 1540/2; % determine z axis values
     
-    figure(1)
-    imagesc(x*100,z*100,env_db,[-40 0]);axis image; colormap gray; % dynamic range set at 60 dB vs original 40 dB
-    xlabel('x (cm)'),ylabel('z (cm)');
+%     xlabel('x (cm)'),ylabel('z (cm)');
+
+    c6tmp{condition,i} = contourc(x*100,z{condition,i}*100,env_db{condition,i},[-6 -6]);
+    c12tmp{condition,i} = contourc(x*100,z{condition,i}*100,env_db{condition,i},[-12 -12]);
+
+    tmp_i=find(c6tmp{condition,i}(1,:)~=-6);
+    c6db{condition,i}=c6tmp{condition,i}(:,tmp_i);
+    tmp_i = find(c12tmp{condition,i}(1,:)~=-12);
+    c12db{condition,i}=c12tmp{condition,i}(:,tmp_i);
     
-%     figure(2)
-%     hold on
-%     [c1tmp,h1] = contour(x*100,z*100,env_db,[-6 -6]);
-%     [c2tmp,h2] = contour(x*100,z*100,env_db,[-12 -12]);
-%     hold off
-%     grid on
-%     tmp_i=find(c1tmp(1,:)~=-6);
-%     c1=c1tmp(:,tmp_i);
-%     tmp_i = find(c2tmp(1,:)~=-12);
-%     c2=c2tmp(:,tmp_i);
-%     fw6db(i)=max(c1(1,:))-min(c1(1,:))
-%     fw12db(i)=max(c2(1,:))-min(c2(1,:))
+    fw6db(i,condition)=max(c6db{condition,i}(1,:))-min(c6db{condition,i}(1,:));
+    fw12db(i,condition)=max(c12db{condition,i}(1,:))-min(c12db{condition,i}(1,:));
 %     figure(3)
 %     hold on
 %     plot(c1(1,:),c1(2,:))
 %     plot(c2(1,:),c2(2,:))
 %     hold off
 %     grid on
-    pause(0.1)
+    disp(sprintf('%.2f cm depth processed.',z_array(i)*100))
 end
+clear env tmp_i rf
+xdc_free(rx); xdc_free(tx);
+end
+
+writerObj1 = VideoWriter('focusTxPSF.avi')
+writerObj1.FrameRate = 10;
+open(writerObj1);
+
+writerObj2 = VideoWriter('pwTxPSF.avi')
+writerObj2.FrameRate = 10;
+open(writerObj2);
+
+for i = 1:length(z_array)
+    figure(1)
+    clf
+    
+    imagesc(x*100,z{1,i}*100,env_db{1,i},[-40 0]);axis image; colormap gray;
+    title(sprintf('%.1f cm Depth (Focused Tx)',100*z_array(i)),'Color','w')
+    axis off;
+    set(gcf,'color','k');
+    
+    frame = getframe(gcf);
+    writeVideo(writerObj1,frame);
+    
+%     subplot(121)
+    figure(2)
+    imagesc(x*100,z{2,i}*100,env_db{2,i},[-40 0]);axis image; colormap gray;
+    title(sprintf('%.1f cm Depth (Planewave Tx)',100*z_array(i)),'Color','w')
+    axis off;
+    set(gcf,'color','k');
+    
+    frame = getframe(gcf);
+    writeVideo(writerObj2,frame);
+    
+%     subplot(122)
+%     imagesc(x*100,z{2,i}*100,env_db{2,i},[-40 0]);axis image; colormap gray;
+% %     title(sprintf('%.1f cm Depth',100*z_array(i)))
+%     axis off;
+    
+%     subplot(223)
+%     hold on
+%     contour(x*100,z{1,i}*100,env_db{1,i},[-6 -6],'b');axis image;
+%     contour(x*100,z{1,i}*100,env_db{1,i},[-12 -12],'r');axis image;
+%     hold off
+%     axis off
+%     
+%     subplot(224)
+%     hold on
+%     contour(x*100,z{2,i}*100,env_db{2,i},[-6 -6],'b');axis image;
+%     contour(x*100,z{2,i}*100,env_db{2,i},[-12 -12],'r');axis image;
+%     hold off
+% %     title(sprintf('%.1f cm Depth',100*z_array(i)))
+%     axis off;
+%     set(gcf,'Position',[100 100 810 802]);
+
+end
+
+close(writerObj1)
+close(writerObj2)
+
+% % Create transmit and receive arrays
+% tx=xdc_focused_array(N_el,el_width,el_height,el_kerf,elv_focus,n_sub_x,n_sub_y,focus);
+% rx=xdc_focused_array(N_el,el_width,el_height,el_kerf,elv_focus,n_sub_x,n_sub_y,focus);
 % 
-% figure
-% hold on
-% p1=plot(z_array*100,fw6db,'linewidth',2);
-% p2=plot(z_array*100,fw12db,'r','linewidth',2);
-% grid on
-% hold off
-% xlabel('Depth (cm)')
-% ylabel('Lateral Resolution (cm)')
+% % Set impulse responses
+% tc=gauspuls('cutoff',f0,BW); % Note: default BWR -6 dB and TPE -60 dB
+% imp_resp=gauspuls(-tc:1/fs:tc,f0,BW);
+% xdc_impulse(tx,imp_resp); 
+% xdc_impulse(rx,imp_resp);
+% 
+% for i = 1:length(z_array)
+%     position=[0 0 z_array(i)];
+%     amplitude=10;
+%     rf=[];start=[];
+%     for nn=1:length(x) %sweeping beam to image
+%         xdc_center_focus(rx,[x(nn) 0 0]);
+%         xdc_dynamic_focus(rx,0,0,0);
+%         [temp,start(nn)]=calc_scat(tx,rx,position,amplitude);
+%         rf(1:length(temp),nn)=temp; % store the rf data generated by calc_scat
+%     end
+%     
+%     min_start=min(start);
+%     for nn=1:size(rf,2), % shift all RF signals appropriately to generate image
+%         temp=[zeros(round((start(nn)-min_start)*fs),1);rf(:,nn)];
+%         temp_rf(1:length(temp),nn)=temp;
+%     end
+%     rf=temp_rf; clear temp_rf;
+%     
+%     env=abs(hilbert(rf)); % envelope calculation
+%     env_db=20*log10(env/max(env(:))); % log scale from 0 to - infinity dB
+%     z=(min_start+(1:size(env_db,1))/fs) * 1540/2; % determine z axis values
+%     
+%     figure(2)
+%     imagesc(x*100,z*100,env_db,[-40 0]);axis image; colormap gray; % dynamic range set at 60 dB vs original 40 dB
+%     xlabel('x (cm)'),ylabel('z (cm)');
+%     
+%     c3tmp = contourc(x*100,z*100,env_db,[-6 -6]);
+%     c4tmp = contourc(x*100,z*100,env_db,[-12 -12]);
+% 
+%     tmp_i=find(c3tmp(1,:)~=-6);
+%     c3=c3tmp(:,tmp_i);
+%     tmp_i = find(c4tmp(1,:)~=-12);
+%     c4=c4tmp(:,tmp_i);
+%     fw6db_noFoc(i)=max(c3(1,:))-min(c3(1,:));
+%     fw12db_noFoc(i)=max(c4(1,:))-min(c4(1,:));
+% %     figure(6)
+% %     hold on
+% %     plot(c3(1,:),c3(2,:))
+% %     plot(c4(1,:),c4(2,:))
+% %     hold off
+% %     grid on
+%     pause(0.1)
+% end
+% 
+% 
+figure
+hold on
+p1=plot(z_array*100,fw6db(:,1),'linewidth',2);
+p2=plot(z_array*100,fw12db(:,1),'linewidth',2);
+p3=plot(z_array*100,fw6db(:,2),':','linewidth',2)
+p4=plot(z_array*100,fw12db(:,2),':','linewidth',2)
+grid on
+hold off
+xlabel('Depth (cm)')
+ylabel('Lateral Resolution (cm)')
 
 
 
@@ -100,5 +216,4 @@ end
 % c1 = contour(x,z,env_db,[-3 -6]);
 % grid on 
 % % clabel(c1)
-xdc_free(tx); xdc_free(rx);
 field_end
