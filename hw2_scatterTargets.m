@@ -1,5 +1,5 @@
 close all; clear all; clc;
-load('hw2_psf_kspace_v2.mat')
+load('./mat_files/hw2_psf_kspace_v2.mat')
 
 scheme = 'gray';
 x_labx = 'Lateral Position (mm)';

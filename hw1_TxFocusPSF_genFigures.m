@@ -1,6 +1,6 @@
 clear all; close all; clc;
 label = 'hhp';
-load(['hw1_sim_data_' label '.mat'])
+load(['./mat_files/hw1_sim_data_' label '.mat'])
 %% PSF B-mode
 % writerObj1 = VideoWriter('focusTxPSF.avi')
 writerObj1.FrameRate = 10;

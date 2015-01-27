@@ -1,7 +1,7 @@
 clear all; close all; clc;
 scheme = 'gray';
-load('hw2_psf_kspace_v2.mat')
-load('hw2_targets_v3.mat')
+load('./mat_files/hw2_psf_kspace_v2.mat')
+load('./mat_files/hw2_targets_v3.mat')
 
 x_lab = 'Lateral frequency (mm^-^1)';
 y_lab = 'Axial frequency (mm^-^1)';

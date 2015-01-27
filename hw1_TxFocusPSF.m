@@ -5,7 +5,6 @@ field_init(-1)
 f0=5e6; BW=0.7; N_el=128; %5 MHz, 128 element linear array w/ lamda pitch, 70% BW, 6.5 F number
 elv_focus=0.04; elv_fnum=6.5; kerf_fraction=0.05;
 
-
 % General parameters
 c=1540; fs=100e6; % speed of sound c and ultrasound sampling f (default fs)
 

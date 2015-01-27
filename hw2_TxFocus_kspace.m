@@ -1,6 +1,6 @@
 clear all; clc;
 
-load('hw2_foc_psf_v2.mat');
+load('./mat_files/hw2_foc_psf_v2.mat');
 
 figure
 for i = 1:2

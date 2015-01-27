@@ -1,5 +1,5 @@
 close all; clear all; clc;
-load('hw2_kArrays.mat')
+load('./mat_files/hw2_kArrays.mat')
 
 scheme = 'jet';
 
