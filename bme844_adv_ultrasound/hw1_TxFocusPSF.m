@@ -1,5 +1,5 @@
 close all; clear all; clc;
-addpath('../field_ii')
+addpath('../../field_ii')
 field_init(-1)
 % Transducer parameters
 f0=5e6; BW=0.7; N_el=128; %5 MHz, 128 element linear array w/ lamda pitch, 70% BW, 6.5 F number
