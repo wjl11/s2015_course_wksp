@@ -125,10 +125,16 @@ for n = 1:2
     %     
     %     figure
     %     imagesc(th_scan,r{i}*100,C_rf{i}); axis image; colormap jet; colorbar;
-
+        disp(['Image at angle ' num2str(rad2deg(th_target(i))) ' simulated.'])
     end
     xdc_free(tx); xdc_free(rx);
 end
+
+figure 
+subplot(211), plot(rad2deg(th_scan),el)
+xlabel('Angle (deg)','fontsize',12), ylabel('No. Active Elements','fontsize',12)
+subplot(212), plot(rad2deg(th_scan),Fnum)
+xlabel('Angle (deg)','fontsize',12), ylabel('F-Number','fontsize',12)
 
 figure, hold on;
 p1 = plot(rad2deg(th_target), Cmax_env(1,:),'bx-','linewidth',2)
