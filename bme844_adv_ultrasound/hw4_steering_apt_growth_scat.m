@@ -2,7 +2,7 @@ close all; clear all; clc;
 addpath('../../field_ii')
 field_init(-1)
 % Transducer parameters
-f0=5e6; BW=0.7; 
+f0=5e6; BW=0.75; 
 % N_el=128; %5 MHz, 128 element linear array w/ lamda pitch, 70% BW, 6.5 F number
 elv_focus=0.04; elv_fnum=6.5; kerf_fraction=0;
 % NOTE: calculations for fnumber do not account for kerf_fraction (keep value at 0)
@@ -92,6 +92,10 @@ for n = 1:2
         env_trim{n,i} = env{n,i}(idx,:);
         rf_trim{n,i} = rf{n,i}(idx,:);
 
+        
+        env_trim_k{n,i} = fftshift(fft2(env_trim{n,i}));
+        rf_trim_k{n,i} = fftshift(fft2(rf_trim{n,i}));
+        
     %     figure
     % %     imagesc(l,ax,out,[-40 0]); axis image; colormap gray;
     %     imagesc(th_scan,r{i}(idx)*100,env_trim{i}); axis image; colormap jet;
@@ -132,29 +136,40 @@ end
 
 figure 
 subplot(211), plot(rad2deg(th_scan),el)
+grid on
 xlabel('Angle (deg)','fontsize',12), ylabel('No. Active Elements','fontsize',12)
 subplot(212), plot(rad2deg(th_scan),Fnum)
+grid on
 xlabel('Angle (deg)','fontsize',12), ylabel('F-Number','fontsize',12)
+
+print -dpng -r300 ./hw4_aperture.png
 
 figure, hold on;
 p1 = plot(rad2deg(th_target), Cmax_env(1,:),'bx-','linewidth',2)
 p2 = plot(rad2deg(th_target), Cmax_env(2,:),'rx-','linewidth',2)
 grid on
 hold off
-legend([p1 p2],{'Aperture growth','Fixed aperture'},'fontsize',12)
+legend([p1 p2],{'Aperture growth','Fixed aperture'},'fontsize',12,'location','southwest')
 xlabel('Angle (deg)','fontsize',12)
 ylabel('Normalized Correlation Coefficient','fontsize',12)
-title('PSF Decorrlation (Envelop Detected)','fontsize',12)
+title('PSF Decorrlation (Envelope Detected)','fontsize',12)
+
+print -dpng -r300 ./hw4_psf_corr_env.png
 
 figure, hold on;
 p3 = plot(rad2deg(th_target), Cmax_rf(1,:),'bx-','linewidth',2)
 p4 = plot(rad2deg(th_target), Cmax_rf(2,:),'rx-','linewidth',2)
 grid on
 hold off
-legend([p3 p4],{'Aperture growth','Fixed aperture'},'fontsize',12)
+legend([p3 p4],{'Aperture growth','Fixed aperture'},'fontsize',12,'location','southwest')
 xlabel('Angle (deg)','fontsize',12)
 ylabel('Normalized Correlation Coefficient')
 title('PSF Decorrelation (RF)','fontsize',12)
+
+print -dpng -r300 ./hw4_psf_corr_rf.png
+
 field_end
+
+
 
 
