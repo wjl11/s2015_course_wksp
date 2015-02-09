@@ -14,14 +14,16 @@ ax_corr_rf{n} = xcorr(rf{n}(n_r{n},corr_i),'coeff');
 
 ax_lag{n} = ax_corr_lag.*(1/fs)*1540/2;
 
-[lat_corr_env{n},lat_corr_lag] = xcorr(env{n}(corr_j,:),'coeff');
-lat_corr_rf{n} = xcorr(rf{n}(corr_j,:),'coeff');
+[lat_corr_env{n},lat_corr_lag] = xcorr(env{n}(corr_j,n_deg),'coeff');
+lat_corr_rf{n} = xcorr(rf{n}(corr_j,n_deg),'coeff');
 
 lat_lag{n} = lat_corr_lag.*th_int;
 
-corr_env{n} = xcorr2(env{n}/max(env{n}(:)));
-corr_rf{n} = xcorr2(rf{n}/max(rf{n}(:)));
-
+tmp_env = env{n}(n_r{n},n_deg);
+tmp_rf = rf{n}(n_r{n},n_deg);
+corr_env{n} = xcorr2(tmp_env./max(tmp_env(:)));
+corr_rf{n} = xcorr2(tmp_rf./max(tmp_rf(:)));
+clear tmp_env tmp_rf
 % 
 % figure;
 % imagesc(deg_scan(n_deg),r{n}(n_r{n}),env_db(n_r{n},n_deg),[-40 0]); colormap gray;
