@@ -43,73 +43,52 @@ lat_res = lambda*foc_z/D;
 ax_res = lambda;
 aResCell = lat_res*ax_res;
 
-ncell = 10;
-xposlim = [-ncell*lat_res ncell*lat_res];
+ncell = 5;
+xposlim = [-0.35 0.35]*1e-2;
 zposlim = [foc_z-ncell*ax_res foc_z+ncell*ax_res];
 
-scatN_array = 4.*[100 300 500 700];
+% scatN_array = 4.*[100 300 500 700];
+scatPerResCell = [1:10];
+rndSeed = [0:9];
 
-for n = 1:length(scatN_array)
-scatN = scatN_array(n);
-xpos = xposlim(1)+(xposlim(2)-xposlim(1)).*rand(scatN,1);
-zpos = zposlim(1)+(zposlim(2)-zposlim(1)).*rand(scatN,1);
-ypos = zeros(scatN,1);
-scatDensity(n) = scatN/(diff(xposlim)*diff(xposlim));
-scatPerResCell(n) = scatDensity(n)*aResCell
-position = [xpos ypos zpos];
-amplitude = ones(scatN,1);
+for n = 1:length(scatPerResCell)
+    scatDensity = scatPerResCell(n)/aResCell;
+    scatN(n) = round((diff(xposlim)*diff(zposlim))*scatDensity);
+    for i = 1:length(rndSeed)
+        rng(rndSeed(i));
+        
+        xpos = xposlim(1)+(xposlim(2)-xposlim(1)).*rand(scatN(n),1);
+        zpos = zposlim(1)+(zposlim(2)-zposlim(1)).*rand(scatN(n),1);
+        ypos = zeros(scatN(n),1);
+        position = [xpos ypos zpos];
+        amplitude = ones(scatN(n),1);
 
-start=[]; 
-for nn = 1:length(th_scan)
-    xdc_center_focus(tx,[0 0 0]); % Make sure to set center first, then focus
-    xdc_focus(tx,0,foc_z.*[sin(th_scan(nn)) 0 cos(th_scan(nn))]);
-    xdc_center_focus(rx,[0 0 0]);
-    xdc_dynamic_focus(rx,0,th_scan(nn),0);
-    [temp,start(nn)]=calc_scat(tx,rx,position,amplitude);
-    rf{n}(1:length(temp),nn)=temp;
-    disp(['Scan line: ' num2str(nn) '/' num2str(length(th_scan))])
+        start=[]; 
+        for nn = 1:length(th_scan)
+            xdc_center_focus(tx,[0 0 0]); % Make sure to set center first, then focus
+            xdc_focus(tx,0,foc_z.*[sin(th_scan(nn)) 0 cos(th_scan(nn))]);
+            xdc_center_focus(rx,[0 0 0]);
+            xdc_dynamic_focus(rx,0,th_scan(nn),0);
+            [temp,start(nn)]=calc_scat(tx,rx,position,amplitude);
+            rf{n,i}(1:length(temp),nn)=temp;
+            disp(['Scan line: ' num2str(nn) '/' num2str(length(th_scan)) ' for s' num2str(i) ' n' num2str(n)])
+        end
+
+        min_start=min(start);
+        for nn=1:size(rf{n,i},2), % shift all RF signals appropriately to generate image
+            temp=[zeros(round((start(nn)-min_start)*fs),1);rf{n,i}(:,nn)];
+            temp_rf(1:length(temp),nn)=temp;
+        end
+        rf{n,i}=temp_rf; clear temp_rf;
+
+        env{n,i}=abs(hilbert(rf{n,i})); % envelope calculation
+        env_db{n,i}=20*log10(env{n,i}/max(env{n,i}(:))); % log scale from 0 to - infinity dB
+        r{n,i}=(min_start+(1:size(env_db{n,i},1))/fs) * 1540/2; % determine z axis values
+
+        n_r{n,i} = find(r{n,i}>zposlim(1) & r{n,i}<zposlim(2));
+    end
 end
 
-min_start=min(start);
-for nn=1:size(rf{n},2), % shift all RF signals appropriately to generate image
-    temp=[zeros(round((start(nn)-min_start)*fs),1);rf{n}(:,nn)];
-    temp_rf(1:length(temp),nn)=temp;
-end
-rf{n}=temp_rf; clear temp_rf;
-
-env{n}=abs(hilbert(rf{n})); % envelope calculation
-env_db=20*log10(env{n}/max(env{n}(:))); % log scale from 0 to - infinity dB
-r{n}=(min_start+(1:size(env_db,1))/fs) * 1540/2; % determine z axis values
-
-deg_scan = rad2deg(th_scan);
-n_deg = find(deg_scan>-4 & deg_scan<4);
-n_r{n} = find(r{n}>0.0395 & r{n}<0.042);
-
-% corr_i = find(th_scan == 0);
-% corr_j = find(r{n} >= foc_z,1);
-% 
-% [ax_corr_env{n},ax_corr_lag] = autocorr(env{n}(n_r{n},corr_i),round(size(env{n},1)/2)-1);
-% ax_corr_rf{n} = autocorr(rf{n}(n_r{n},corr_i),round(size(env{n},1)/2)-1);
-% 
-% ax_lag{n} = ax_corr_lag.*(1/fs)*1540/2;
-% 
-% [lat_corr_env{n},lat_corr_lag] = autocorr(env{n}(corr_j,n_deg),round(size(env{n},2)/2)-1);
-% lat_corr_rf{n} = autocorr(rf{n}(corr_j,n_deg),round(size(env{n},2)/2)-1);
-% 
-% lat_lag{n} = lat_corr_lag.*th_int;
-% 
-% corr_env{n} = xcorr2(env{n}(n_r{n},n_deg));
-% corr_rf{n} = xcorr2(rf{n}(n_r{n},n_deg));
-% 
-figure;
-imagesc(deg_scan,r{n},env_db,[-40 0]); colormap gray;
-
-% figure;
-% hold on; plot(lat_lag{n},lat_corr_env{n},'r'); plot(lat_lag{n}, lat_corr_rf{n},'b'); hold on;
-% figure; hold on; plot(ax_lag{n},ax_corr_env{n},'r'); plot(ax_lag{n}, ax_corr_rf{n},'b'); hold on;
-
-end
-
-save('hw5_data.mat')
+save('hw5_data_full.mat')
 xdc_free(tx); xdc_free(rx);
 field_end
