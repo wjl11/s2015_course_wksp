@@ -216,7 +216,7 @@ errorbar(scatPerResCell,SNR_m,SNR_s)
 grid on, xlabel('Average Scatterers Per Resolution Cell')
 ylabel('Speckle SNR (\mu/\sigma)')
 hold off
-print -dpng -r300 ./hw5_speckle_snr.png
+% print -dpng -r300 ./hw5_speckle_snr.png
 
 
 figure, hold on;
@@ -227,7 +227,7 @@ grid on, xlabel('Average Scatterers Per Resolution Cell')
 ylabel('Lateral Speckle Size (mm)')
 legend([e1 e2 p1],{'RF','Detected','Lateral resolution (\lambdaz/D)'})
 hold off
-print -dpng -r300 ./hw5_lat_autocorr_ave.png
+% print -dpng -r300 ./hw5_lat_autocorr_ave.png
 
 figure, hold on;
 e1 = errorbar(scatPerResCell,1000*ax_rf_m,1000*ax_rf_s)
@@ -237,5 +237,5 @@ grid on, xlabel('Average Scatterers Per Resolution Cell')
 ylabel('Axial Speckle Size (mm)')
 legend([e1 e2 p1],{'RF','Detected','Axial resolution (\lambda)'})
 hold off
-print -dpng -r300 ./hw5_ax_autocorr_ave.png
+% print -dpng -r300 ./hw5_ax_autocorr_ave.png
 
