@@ -30,7 +30,7 @@ xposlim = [-1 1]*1e-2;
 zposlim = [3 5]*1e-2;
 
 maxth = atand(xposlim(2)/foc_z);
-th_int = 0.1;
+th_int = 0.2;
 th_scan = (-maxth:th_int:maxth)*pi/180;
 
 
@@ -90,6 +90,6 @@ for f = 1
     n_r = find(r{f}>zposlim(1) & r{f}<zposlim(2));
 end
 
-
+save('hw6_test.mat')
 xdc_free(tx); xdc_free(rx);
 field_end
