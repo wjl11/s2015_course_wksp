@@ -2,9 +2,6 @@ close all; clear all; clc;
 addpath('../../field_ii')
 field_init(-1)
 
-
-rng(0);
-
 % Transducer parameters
 f0=5e6; BW=0.75; 
 % N_el=128; %5 MHz, 128 element linear array w/ lamda pitch, 70% BW, 6.5 F number
@@ -26,29 +23,25 @@ n_sub_y=ceil(el_height/(lambda/4));
 focus=[0 0 elv_focus]; %focus at 4 cm depth
 foc_z = focus(3);
 
-xposlim = [-1 1]*1e-2;
-zposlim = [3 5]*1e-2;
-
-maxth = atand(xposlim(2)/foc_z);
-th_int = 0.2;
-th_scan = (-maxth:th_int:maxth)*pi/180;
-
-
 N_el_tot = 128;
 tx=xdc_linear_array(N_el_tot,el_width,el_height,el_kerf,n_sub_x,n_sub_y,focus);
 rx=xdc_linear_array(N_el_tot,el_width,el_height,el_kerf,n_sub_x,n_sub_y,focus);
 
 D = N_el_tot*(el_width+el_kerf)-el_kerf;
 
-% Set impulse responses
-tc=gauspuls('cutoff',f0,BW); % Note: default BWR -6 dB and TPE -60 dB
-imp_resp=gauspuls(-tc:1/fs:tc,f0,BW);
-xdc_impulse(tx,imp_resp); 
-xdc_impulse(rx,imp_resp);
 
 lat_res = lambda*foc_z/D;
 ax_res = lambda;
 aResCell = lat_res*ax_res;
+
+rng(0);
+
+xposlim = [-1 1]*1e-2;
+zposlim = [3 5]*1e-2;
+
+maxth = atand(xposlim(2)/foc_z);
+th_int = 0.2;
+th_scan = (-maxth:th_int:maxth)*pi/180;
 
 scatPerResCell = 5; % minimum for ~ fully developed speckle
 
@@ -64,32 +57,46 @@ amplitude = 2.*ones(scatN,1);
 k = find((xpos.^2+(zpos-0.04).^2)<0.005^2);
 amplitude(k) = 1;
 
-for f = 1
-    start=[]; 
+f0_array = (2:10).*1e6;
+
+for f = 1:length(f0_array)
+    fh(f) = f0_array(f)+0.5;
+    fl(f) = f0_array(f)-0.5;
+    f0(f) = f0_array(f);
+    BW(f) = (fh(f)-fl(f))/f0(f);
+    
+    % Set impulse responses
+    tc=gauspuls('cutoff',f0(f),BW(f)); % Note: default BWR -6 dB and TPE -60 dB
+    imp_resp=gauspuls(-tc:1/fs:tc,f0(f),BW(f));
+    xdc_impulse(tx,imp_resp); 
+    xdc_impulse(rx,imp_resp);
+
+    start=[]; rf =[];
     for nn = 1:length(th_scan)
         xdc_center_focus(tx,[0 0 0]); % Make sure to set center first, then focus
         xdc_focus(tx,0,foc_z.*[sin(th_scan(nn)) 0 cos(th_scan(nn))]);
         xdc_center_focus(rx,[0 0 0]);
         xdc_dynamic_focus(rx,0,th_scan(nn),0);
         [temp,start(nn)]=calc_scat(tx,rx,position,amplitude);
-        rf{f}(1:length(temp),nn)=temp;
-        disp(['Scan line: ' num2str(nn) '/' num2str(length(th_scan)) ' for f0 = ' num2str(f) ' MHz'])
+        rf(1:length(temp),nn)=temp;
+        disp(['Scan line: ' num2str(nn) '/' num2str(length(th_scan)) ' for f0 = ' num2str(f0(f)/1e6) ' MHz'])
     end
 
     min_start=min(start);
-    for nn=1:size(rf{f},2), % shift all RF signals appropriately to generate image
-        temp=[zeros(round((start(nn)-min_start)*fs),1);rf{f}(:,nn)];
+    for nn=1:size(rf,2), % shift all RF signals appropriately to generate image
+        temp=[zeros(round((start(nn)-min_start)*fs),1);rf(:,nn)];
         temp_rf(1:length(temp),nn)=temp;
     end
-    rf{f}=temp_rf; clear temp_rf;
+    rf=temp_rf; clear temp_rf;
 
-    env{f}=abs(hilbert(rf{f})); % envelope calculation
-    env_db{f}=20*log10(env{f}/max(env{f}(:))); % log scale from 0 to - infinity dB
-    r{f}=(min_start+(1:size(env_db{f},1))/fs) * 1540/2; % determine z axis values
+    env=abs(hilbert(rf)); % envelope calculation
+    env_db=20*log10(env/max(env(:))); % log scale from 0 to - infinity dB
+    r=(min_start+(1:size(env_db,1))/fs) * 1540/2; % determine z axis values
     
-    n_r = find(r{f}>zposlim(1) & r{f}<zposlim(2));
+    save(['hw6_data' num2str(f0(f)/1e6) '.mat'],'env','r')
+    clear env env_db r
 end
 
-save('hw6_test.mat')
+save('hw6_params.mat','fh','fl','f0','BW','th_scan','xpos','zpos')
 xdc_free(tx); xdc_free(rx);
 field_end
