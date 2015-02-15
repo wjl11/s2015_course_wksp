@@ -57,7 +57,7 @@ amplitude = 2.*ones(scatN,1);
 k = find((xpos.^2+(zpos-0.04).^2)<0.005^2);
 amplitude(k) = 1;
 
-f0_array = (2:10).*1e6;
+f0_array = (3:10).*1e6;
 
 fh = f0_array+0.5e6;
 fl = f0_array-0.5e6;
@@ -84,7 +84,7 @@ for f = 1:length(f0_array)
         xdc_dynamic_focus(rx,0,th_scan(nn),0);
         [temp,start(nn)]=calc_scat(tx,rx,position,amplitude);
         rf(1:length(temp),nn)=temp;
-        disp(['Scan line: ' num2str(nn) '/' num2str(length(th_scan)) ' for f0 = ' num2str(f0(f)/1e6) ' MHz'])
+        disp(['Scan line: ' num2str(nn) '/' num2str(length(th_scan)) ' for f0 = ' num2str(f0_array(f)/1e6) ' MHz'])
     end
 
     min_start=min(start);
@@ -98,7 +98,7 @@ for f = 1:length(f0_array)
     env_db=20*log10(env/max(env(:))); % log scale from 0 to - infinity dB
     r=(min_start+(1:size(env_db,1))/fs) * 1540/2; % determine z axis values
     
-    save(['hw6_data' num2str(f0(f)/1e6) '.mat'],'env','r')
+    save(['hw6_data' num2str(f0_array(f)/1e6) '.mat'],'env','r')
     clear env env_db r
 end
 
