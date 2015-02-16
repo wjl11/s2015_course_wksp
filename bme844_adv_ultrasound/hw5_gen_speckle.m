@@ -48,7 +48,7 @@ xposlim = [-0.35 0.35]*1e-2;
 zposlim = [foc_z-ncell*ax_res foc_z+ncell*ax_res];
 
 % scatN_array = 4.*[100 300 500 700];
-scatPerResCell = [1:10];
+scatPerResCell = [11:15];
 rndSeed = [0:9];
 
 for n = 1:length(scatPerResCell)
@@ -89,6 +89,6 @@ for n = 1:length(scatPerResCell)
     end
 end
 
-save('hw5_data_full.mat')
+save('hw5_data_full2.mat')
 xdc_free(tx); xdc_free(rx);
 field_end
