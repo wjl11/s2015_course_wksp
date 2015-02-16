@@ -7,3 +7,5 @@ xc = 2*cos(40*pi*t+pi/3);
 20/fs
 
 stem(t,xc)
+
+
