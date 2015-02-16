@@ -57,14 +57,16 @@ amplitude = 2.*ones(scatN,1);
 k = find((xpos.^2+(zpos-0.04).^2)<0.005^2);
 amplitude(k) = 1;
 
-f0_array = (3:10).*1e6;
+f0_array = (2:0.2:10).*1e6;
 
 fh = f0_array+0.5e6;
 fl = f0_array-0.5e6;
 BW = (fh-fl)./f0_array;
 
 for f = 1:length(f0_array)
-    
+
+	if mod(f0_array(f)/1e6,1) == 0
+	else
     % Set impulse responses
     tc=gauspuls('cutoff',f0_array(f),BW(f)); % Note: default BWR -6 dB and TPE -60 dB
     imp_resp=gauspuls(-tc:1/fs:tc,f0_array(f),BW(f));
@@ -100,6 +102,7 @@ for f = 1:length(f0_array)
     
     save(['hw6_data' num2str(f0_array(f)/1e6) '.mat'],'env','r')
     clear env env_db r
+	end
 end
 
 save('hw6_params.mat','fh','fl','f0','BW','th_scan','xpos','zpos')
