@@ -128,6 +128,9 @@ fy2 = y.*exp(-y);
 fy3 = (y.^2/2).*exp(-y);
 fy4 = (y.^3/6).*exp(-y);
 
+sum(fy4)
+sum(fy3)
+
 hold on;
 p1 = plot(y,fy2)
 p2 = plot(y,fy3)
@@ -137,4 +140,4 @@ hold off
 legend([p1 p2 p3],{'f_y_2','f_y_3','f_y_4'})
 xlabel('y'), ylabel('PDF f(y)')
 
-print -dpng -r300 ./hw1_3.7.png
+% print -dpng -r300 ./hw1_3.7.png
