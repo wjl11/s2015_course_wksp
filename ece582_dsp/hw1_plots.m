@@ -25,16 +25,18 @@ hold on
 plot(w,Xr)
 stem(w_dft,real(X_dft),'r')
 title('N = 32, \omega_0 = \pi/4'), ylabel('Real X_R'),xlabel('Frequency \omega')
+legend('DTFT','DFT')
 hold off
-% print -dpng -r300 ./hw1_2-2c_real.png
+print -dpng -r300 ./hw1_2-2c_real.png
 
 figure
 hold on
 plot(w,Xi)
 stem(w_dft,imag(X_dft),'r')
 title('N = 32, \omega_0 = \pi/4'), ylabel('Imaginary X_I'),xlabel('Frequency \omega')
+legend('DTFT','DFT')
 hold off
-% print -dpng -r300 ./hw1_2-2c_im.png
+print -dpng -r300 ./hw1_2-2c_im.png
 
 %% 2.2d
 clear all; close all; clc
@@ -64,8 +66,9 @@ plot(w,Xr)
 stem(w_dft,real(X_dft),'r')
 title('N = 32, \omega_0 = 1.1\pi/4'), ylabel('Real X_R'),xlabel('Frequency \omega')
 hold off
+legend('DTFT','DFT')
 
-% print -dpng -r300 ./hw1_2-2d_real.png
+print -dpng -r300 ./hw1_2-2d_real.png
 
 figure
 hold on
@@ -73,8 +76,9 @@ plot(w,Xi)
 stem(w_dft,imag(X_dft),'r')
 title('N = 32, \omega_0 = 1.1\pi/4'), ylabel('Imaginary X_I'),xlabel('Frequency \omega')
 hold off
+legend('DTFT','DFT')
 
-% print -dpng -r300 ./hw1_2-2d_im.png
+print -dpng -r300 ./hw1_2-2d_im.png
 
 %% 2.5a
 clear all; close all; clc
