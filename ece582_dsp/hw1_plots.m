@@ -122,22 +122,22 @@ legend([s1(1),s2(1)],{'Error from conv()','Error from filter()'})
 %% 3.7
 clear all; close all; clc
 
-y = 0:0.1:10;
+x = 0:0.1:10;
 
-fy2 = y.*exp(-y);
-fy3 = (y.^2/2).*exp(-y);
-fy4 = (y.^3/6).*exp(-y);
+fy2 = x.*exp(-x);
+fy3 = (x.^2/2).*exp(-x);
+fy4 = (x.^3/6).*exp(-x);
 
 sum(fy4)
 sum(fy3)
 
 hold on;
-p1 = plot(y,fy2)
-p2 = plot(y,fy3)
-p3 = plot(y,fy4)
+p1 = plot(x,fy2)
+p2 = plot(x,fy3)
+p3 = plot(x,fy4)
 hold off
 
 legend([p1 p2 p3],{'f_y_2','f_y_3','f_y_4'})
-xlabel('y'), ylabel('PDF f(y)')
+xlabel('x'), ylabel('PDF f(x)')
 
-% print -dpng -r300 ./hw1_3.7.png
+print -dpng -r300 ./hw1_3.7.png
