@@ -7,7 +7,7 @@ df = [0:0.2:1.2];
 for n = 1:length(df)
     idx = 1;
     if df(n) == 0 
-        filename = ['hw6_data5.mat'];
+        filename = ['hw6_data6.8.mat'];
         disp(['Loading ' filename]);
         load(filename);
         env_mat(:,:,idx) = env;
@@ -54,10 +54,10 @@ for n = 1:length(df)
     im_les = NaN(size(mean_env{n}));
     im_bg = mean_env{n};
 
-    im_bg([1:1000 3300:end],:) = NaN;
-    im_bg(:,[1:20 120:end]) = NaN;
-%     im_bg([1:1200 3000:end],:) = NaN;
+%     im_bg([1:1300 3000:end],:) = NaN;
 %     im_bg(:,[1:20 120:end]) = NaN;
+    im_bg([1:1200 3000:end],:) = NaN;
+    im_bg(:,[1:20 120:end]) = NaN;
 
     for i = 1:length(r_les)
         im_les(r_les(i),th_les(i)) = mean_env{n}(r_les(i),th_les(i));
@@ -86,7 +86,7 @@ for n = 1:length(df)
 %     subplot(122)
 %     imagesc(rad2deg(th_scan),100*r,im_bg); colormap gray
 %     xlabel('\theta (deg)'),ylabel('Depth (cm)')
-    
+%     
     clear im_les im_bg
 end
 
