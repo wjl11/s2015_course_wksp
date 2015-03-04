@@ -1,9 +1,9 @@
 clear all; close all; clc;
 
-load('hw8_params_les.mat');
+load('./mat_files/hw8_params_les.mat');
 
 for n = 1:length(scat_amp)
-        filename = ['hw8_data' num2str(f) '_les.mat'];
+        filename = ['./mat_files/hw8_data' num2str(scat_amp(n)) '_les.mat'];
         disp(['Loading ' filename]);
         load(filename);
 
@@ -38,7 +38,7 @@ for n = 1:length(scat_amp)
 end
 
 figure
-plot(scat_amp,CNR)
+plot(scat_amp,CNR,'*')
 xlabel('Scattering Amplitude'),ylabel('CNR')
 print -dpng -r300 ./hw8_CNR.png
 
