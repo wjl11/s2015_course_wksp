@@ -38,7 +38,7 @@ for n = 1:length(scat_amp)
 end
 
 figure
-plot(scat_amp,CNR,'*')
+plot(scat_amp(1:end-1),CNR(1:end-1),'x')
 xlabel('Scattering Amplitude'),ylabel('CNR')
 print -dpng -r300 ./hw8_CNR.png
 
