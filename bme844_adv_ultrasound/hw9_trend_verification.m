@@ -1,4 +1,4 @@
-%%
+%% lateral resolution (analytical)
 close all; clear all 
 x = -2*pi:pi/1000:2*pi;
 
@@ -15,7 +15,7 @@ plot(fftshift(abs(fft(y))))
 plot(fftshift(abs(fft(det_y))))
 hold off
 
-%%
+%% k-space rf vs detected
 close all; clear all;
 load('./mat_files/hw2_foc_psf_v2.mat');
 k_rf = fftshift(abs(fft2(rf{1})));
@@ -67,3 +67,14 @@ p1 = plot(k_rf(:,53))
 p2 = plot(k_env(:,53))
 hold off
 legend([p1 p2],{'RF','Detected'})
+
+%%
+close all; clear all;
+load('./mat_files/hw2_foc_psf_v2.mat');
+rf{1} = rf{1}/max(rf{1}(:));
+acorr = normxcorr2(rf{1}(100:400,60:100), rf{1});
+figure;
+subplot(121)
+imagesc(acorr); colorbar
+subplot(122)
+imagesc(rf{1})
