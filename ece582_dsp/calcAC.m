@@ -1,7 +1,7 @@
 function rho_hat = calcAC(x,nlags)
 % calculate the estimated normalized autocorrelation (eqn 1.2.1)
 % nlags specifics number of lags to calculate rho (starting from l = 0)
-% x is the signal to correlate whose 1st index corresponds to n = 0
+% x is the signal to autocorr whose 1st index corresponds to n = 0
 
 rho_hat = zeros(1,nlags);
 for l = 0:nlags-1

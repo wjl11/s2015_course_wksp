@@ -1,9 +1,9 @@
 clear all; close all; clc;
 rng(0)
 %% 4.3 part b and c
+
+% generate 1000 realizations of x[n] using difference equation
 x = zeros(1,1000);
-X = linspace(-5,5,100);
-varx = 2;
 ni = 0:999;
 for n = ni
     if n >=2
@@ -11,13 +11,20 @@ for n = ni
     end
     x(n+1) = x(n+1)+sqrt(15/8)*randn;
 end
-Y = normpdf(X,0,sqrt(varx));
+
+% organize x[n] realizations in histogram to estimate pdf
 figure
 [counts, centers] = hist(x,50);
 hist(x,50)
 xlabel('x'), ylabel('Frequency'), title('Observed x[n] N = 1000')
 
+% generate true pdf values based on calculate mean and variance of x
+varx = 2;
+mux = 0;
+X = linspace(min(centers),max(centers),100);
+Y = normpdf(X,mux,sqrt(varx));
 
+% plot normalized estimated and true pdfs
 figure
 hold on
 plot(centers,counts./max(counts),'x')
@@ -26,22 +33,15 @@ hold off
 xlabel('x'), ylabel('Normalized PDF f_x(x)')
 legend('Estimated','True')
 
-
+% user defined function to implement eqn 1.2.1 (see section below)
 li = 0:20;
 rho_hat = calcAC(x,21);
-% *** routine for calcAC defined below used to implement eqn 1.2.1
-% for l = li
-%     rho_hat(l+1) = 0;
-%     for n = l:max(ni)
-%         rho_hat(l+1) = rho_hat(l+1) + x(n+1)*conj(x(n-l+1));
-%     end
-%     rho_hat(l+1) = rho_hat(l+1)/sum(x.*conj(x));
-% end
 
-% calculate the normalized autocorrelation given by the expression
+% calculate the normalized autocorrelation given by the known expression
 r_0 = (1/2).^abs(0)+(-1/2).^abs(0); 
 rho = ((1/2).^abs(li)+(-1/2).^abs(li))./r_0; 
 
+% plot estimated and true rho values
 figure
 hold on
 stem(li, rho_hat)
@@ -56,14 +56,15 @@ clear li rho_hat x rho
 pause
 close all
 %% 4.19 part a
+
+% Generate 100 samples of x[n] given by the autoregressive model:
+% AR(2): x(n) = -a1*x(n-1)-a2*x(n-2)+w(n)
 d0 = 1;
 a1 = -1.6454;
 a2 = 0.9025;
 
-% Generate realization governed by the autoregressive model:
-% AR(2): x(n) = -a1*x(n-1)-a2*x(n-2)+w(n)
-x = zeros(1,101);
-ni  = 0:100;
+x = zeros(1,100);
+ni  = 0:99;
 for n = ni;
     if n >= 1
         x(n+1) = -a1*x(n+1-1);
@@ -76,8 +77,8 @@ end
 figure   
 plot(ni,x); xlabel('n'), ylabel('x[n]')
 
-li = 0:100; % calculate the estimated normalized autocorrelation (eqn 1.2.1)
-rho_hat = calcAC(x,101);
+li = 0:99; % calculate the estimated normalized autocorrelation (eqn 1.2.1)
+rho_hat = calcAC(x,100);
 
 figure
 hold on
