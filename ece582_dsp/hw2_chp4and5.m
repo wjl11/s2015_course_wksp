@@ -16,7 +16,7 @@ end
 figure
 [counts, centers] = hist(x,50);
 hist(x,50)
-xlabel('x'), ylabel('Frequency'), title('Observed x[n] N = 1000')
+xlabel('x'), ylabel('Frequency'), title('Histogram of x[n] N = 1000')
 
 % generate true pdf values based on calculate mean and variance of x
 varx = 2;
@@ -30,10 +30,12 @@ hold on
 plot(centers,counts./max(counts),'x')
 plot(X,Y./max(Y))
 hold off
-xlabel('x'), ylabel('Normalized PDF f_x(x)')
+xlabel('x'), ylabel('Probability f_x(x)')
 legend('Estimated','True')
+title('Estimated and True PDF')
 
-% user defined function to implement eqn 1.2.1 (see section below)
+% estimate the normalized autocorrelation using user defined function
+% calcAC, implementing eqn 1.2.1 (see section below)
 li = 0:20;
 rho_hat = calcAC(x,21);
 
@@ -50,12 +52,13 @@ hold off
 xlabel('$$l$$','Interpreter','Latex')
 ylabel('$$\rho_x(l)$$','Interpreter','Latex')
 legend('Estimated','True')
+title('Estimated and True Autocorrelation')
 
 clear li rho_hat x rho
 %%
 pause
 close all
-%% 4.19 part a
+%% 4.19 part a & b
 
 % Generate 100 samples of x[n] given by the autoregressive model:
 % AR(2): x(n) = -a1*x(n-1)-a2*x(n-2)+w(n)
@@ -76,58 +79,72 @@ for n = ni;
 end
 figure   
 plot(ni,x); xlabel('n'), ylabel('x[n]')
+title('x[n] for N = 100')
 
-li = 0:99; % calculate the estimated normalized autocorrelation (eqn 1.2.1)
+% estimate ACS (eqn 1.2.1)
+li = 0:99; 
 rho_hat = calcAC(x,100);
 
+% calculate poles of H(z) given a1 and a2
+p = roots([1 a1 a2]); 
+
+% extract angle and magnitude of complex poles to solve for true rho values
+r = unique(abs(p));
+theta = unique(abs(angle(p))); 
+
+% calculate theoretical ACS (eqn. 4.2.83)
+rho = r.^li.*(sin((li+1).*theta)-r^2*sin((li-1).*theta))...
+    ./((1+r^2)*sin(theta));
+
+% plot estimated and theoretical ACS
 figure
 hold on
 stem(li,rho_hat); 
-    
-%% 4.19 part b
-p = roots([1 a1 a2]); % calculate poles of H(z) given a1 and a2
-r = unique(abs(p));
-theta = unique(abs(angle(p))); % extract angle and magnitude of complex poles
-
-% calculate theoretical value for rho (eqn. 4.2.83)
-rho = r.^li.*(sin((li+1).*theta)-r^2*sin((li-1).*theta))./((1+r^2)*sin(theta));
-
 stem(li,rho,'r:'); 
 xlabel('$$l$$','Interpreter','Latex')
 ylabel('$$\rho_x(l)$$','Interpreter','Latex')
 xlim([0 10])
 ylim([-1 1])
 legend('Estimated','True')
+title('Estimated and Theoretical ACS')
 hold off
 %%
 pause
 close all
 %% 4.19 part c
-% given the relationships derived from the Yule-Walker Eqns (eqn 4.2.33
-% etc)
 
+% define estimated rho vector for Yule-Walker 
 rhohat_vec = rho_hat(2:end)';
-Phat(1,:) = rho_hat(1:end-1);
-for i = 1:99
-    Phat(i+1,:) = [fliplr(rho_hat(2:i+1)) rho_hat(1:100-i)];
-end
+
+% define estimated autocorr matrix for Yule-Walker
+c1 = rho_hat(1:end-1); % first column of toeplitz matrix
+r1 = conj(rho_hat(1:end-1)); % first row of toeplitz matrix
+Phat = toeplitz(c1,r1); clear c1 r1
+
+% solve for estimated parameters using the Yule-Walker eqn (eqn 4.2.33)
 ahat_vec = -inv(Phat)*rhohat_vec;
 
+% define true rho vector for Yule-Walker 
 rho_vec = rho(2:end)';
-P(1,:) = rho(1:end-1); % form correlation matrix
-for i = 1:99
-    P(i+1,:) = [fliplr(rho(2:i+1)) rho(1) conj(rho(2:100-i))];
-end
+
+% define true autocorr matrix for Yule-Walker
+c1 = rho(1:end-1); % first column of toeplitz matrix
+r1 = conj(rho(1:end-1)); % first row of toeplitz matrix
+P = toeplitz(c1,r1); clear c1 r1
+
+% solve for true parameters using the Yule-Walker eqn (eqn 4.2.33)
 a_vec = -inv(P)*rho_vec;
 
+% plot true and estimated parameter values for comparison
 figure
 hold on
 stem(ahat_vec); 
 stem(a_vec,'r:')
 xlabel('k'); ylabel('a_k')
 hold off
-legend('Yule-Walker estimated parameters','True parameters')
+legend('Yule-Walker Estimated','True')
 xlim([1 15])
+title('Estimated and Theoretical a_k Parameters')
 
 %%
 pause
@@ -138,8 +155,9 @@ clear tmp
 
 w = -pi:pi/100:pi;
 % calculate the PSD given the estimated a_k parameters by definition of Rx
+% Rx = w_var * |H(z)|^2 where H(z) = 1/(1+a1*z^-1+a2*z^-2 ...) 
+%   z = e^jw and w_var = 1 (p. 165)
 for wi = 1:length(w)
-    % Rx = var * |H(z)|^2 where H(z) = 1/(1+a1*z^-1+a2*z^-2 ...)
     tmp = exp(-1i.*w(wi).*(1:length(ahat_vec)));
     R_hat(wi) = 1./((1+sum(ahat_vec'.*tmp))*conj(1+sum(ahat_vec'.*tmp)));
     clear tmp
@@ -158,13 +176,35 @@ legend('Estimate PSD','True PSD')
 xlim([-pi pi])
 xlabel('\omega')
 ylabel('PSD')
-
+title('Estimated and Theoretical PSD')
 %%
 pause
-close all
-%% 4.32 part a
+close all 
+%% 4.19 part e
 
-clear li ni n l rho_hat x rhohat_vec Phat ahat_vec
+% calculate the true and estimated PACS/lattice from ak parameters 
+% using the function df2latcf (see section below)
+khat_vec = df2latcf([1; ahat_vec]);
+k_vec = df2latcf([1; a_vec]);
+
+figure
+hold on
+stem(0:length(k_vec)-1,khat_vec); 
+stem(0:length(k_vec)-1,k_vec,'r:')
+xlabel('m'); ylabel('k_m')
+hold off
+legend('Estimated','True')
+xlim([1 15])
+title('Estimated and Theoretical PACS')
+%%
+pause
+%% 4.32 part a
+close all; clear all;
+
+% clear li ni n l rho_hat x rhohat_vec Phat ahat_vec
+rng(9)
+% Generate 100 samples of x[n] in part a) based on difference equation 
+% defined by the system function H(z)
 ni = 0:99;
 x = zeros(1,length(ni));
 for n = ni
@@ -176,135 +216,95 @@ for n = ni
     end
     x(n+1) = x(n+1) + randn;
 end
-
 figure
 plot(ni,x); xlabel('n'),ylabel('x[n]')
+title('x[n] for N = 100')
 
-li = 0:99; % calculate the estimated normalized autocorrelation (eqn 1.2.1)
+% estimate the normalized autocorrelation using user defined function
+% calcAC, implementing eqn 1.2.1
+li = 0:99; 
 rho_hat = calcAC(x,length(li));
 
 figure
+subplot(211)
 stem(li, rho_hat); 
 xlabel('$$l$$','Interpreter','Latex')
 ylabel('$$\hat{\rho_x}(l)$$','Interpreter','Latex')
 xlim([0 20])
+title('Estimated ACS')
 
-% calculate PACS based on eqn 4.2.43 
+% calculate PACS based on eqn 4.2.43 and with df2latcf
+% define normalizaed autocorrelation vector
 rhohat_vec = rho_hat(2:end)';
-Phat(1,:) = rho_hat(1:end-1);
-for i = 1:98
-    Phat(i+1,:) = [fliplr(rho_hat(2:i+1)) rho_hat(1) conj(rho_hat(2:99-i))];
-end
-ahat_vec = -inv(Phat)*rhohat_vec; 
 
-figure
-hold on
-stem(ahat_vec); 
+% define autocorrelation matrix 
+c1 = rho_hat(1:end-1); % first column of toeplitz matrix
+r1 = conj(rho_hat(1:end-1)); % first row of toeplitz matrix
+Phat = toeplitz(c1,r1); clear c1 r1
+
+% calculate direct form parameters and generate PACS
+ahat_vec = -inv(Phat)*rhohat_vec; 
+khat_vec = df2latcf([1; ahat_vec]);
+
+subplot(212)
+stem(0:length(khat_vec)-1, khat_vec); 
 xlabel('m'); ylabel('k_m')
 xlim([1 20])
+title('Estimated PACS')
 
 %%
 pause
-close all
 %% 4.32 part b
-clear li ni n l rho_hat x rhohat_vec Phat ahat_vec
-
+close all; clear all
+% clear li ni n l rho_hat x rhohat_vec Phat ahat_vec
+rng(5)
+% Generate 100 samples of x[n] in part b) based on difference equation 
+% defined by the system function H(z)
 ni = 0:99;
 x = zeros(1,length(ni));
-
 for n = ni
     if n >= 1
-        x(n+1) = x(n+1)+1.9*x(n+1-1)-0.5*W(n);
+        x(n+1) = x(n+1)+1.9*x(n+1-1)-0.5*W(n+1-1);
     end
     if n >= 2
         x(n+1) = x(n+1)-0.9*x(n+1-2);
     end
-    W(n+1) = randn;
+    W(n+1) = randn; % note that the system is PZ
     x(n+1) = x(n+1) + W(n+1);
 end
-
 figure
 plot(ni,x); xlabel('n'),ylabel('x[n]')
+title('x[n] for N = 100')
 
-li = 0:99; % calculate the estimated normalized autocorrelation (eqn 1.2.1)
+% estimate the normalized autocorrelation using user defined function
+% calcAC, implementing eqn 1.2.1
+li = 0:99;
 rho_hat = calcAC(x,length(li));
 
 figure
+subplot(211)
 stem(li, rho_hat); 
 xlabel('$$l$$','Interpreter','Latex')
 ylabel('$$\hat{\rho_x}(l)$$','Interpreter','Latex')
 xlim([0 20])
+title('Estimated ACS')
 
-% calculate PACS based on the modified Yule-Walker (eqn 4.4.9) for PZ  
+% calculate parameters based on the modified Yule-Walker (eqn 4.4.9) for PZ  
 rhohat_vec = rho_hat(3:end)';
 
-% generate the non-hermetian topelitz matrix using the estimated rho values
-for i = 1:length(rhohat_vec)-1
-    Phat(i,:) = [fliplr(rho_hat(1:i+1)) zeros(1,length(rhohat_vec)-i-1)];
-end
-Phat(length(rhohat_vec),:) = [fliplr(rho_hat(3:i+2)) rho_hat(2)];
-ahat_vec = -inv(Phat)*rhohat_vec;
+P = length(rhohat_vec);
+Q = 1; 
+% generate the non-hermetian topelitz matrix of estimated rho values
+c1 = [rho_hat(Q+1:Q+1+P-1)]; % first column of toeplitz matrix
+r1 = [fliplr(rho_hat(1:Q+1)) zeros(1,P-(Q+1))]; % first row of toeplitz matrix
+Phat = toeplitz(c1,r1); clear c1 r1
 
-figure
-hold on
-stem(ahat_vec); 
+% calculate PACS based on eqn 4.2.43 and with df2latcf
+ahat_vec = -inv(Phat)*rhohat_vec;
+khat_vec = df2latcf([1; ahat_vec]);
+
+subplot(212)
+stem(0:length(khat_vec)-1, khat_vec); 
 xlabel('m'); ylabel('k_m')
 xlim([1 20])
-
-%%
-pause
-%% 5.2 part a & b
-close all
-
-N = [11 31 51];
-figure
-for nn = 1:length(N)
-    subplot(length(N),1,nn)
-    stem(-floor(N(nn)/2):floor(N(nn)/2),bartlett(N(nn)))
-    xlabel('n')
-    ylabel('w_B[n]')
-    title(sprintf('bartlett (N = %d)',N(nn)))
-end
-
-figure
-for nn = 1:length(N)
-    subplot(length(N),1,nn)
-    stem(-floor(N(nn)/2):floor(N(nn)/2),triang(N(nn)))
-    xlabel('n')
-    ylabel('w_T[n]')
-    title(sprintf('triang (N = %d)',N(nn)))
-end
-
-Ndtft = 1024;
-figure
-for nn = 1:length(N)
-    subplot(length(N),1,nn)
-    WB = fftshift(fft(bartlett(N(nn)),Ndtft));
-    WT = fftshift(fft(triang(N(nn)),Ndtft));
-    hold on
-    plot(linspace(-pi,pi,Ndtft),log10(abs(WB)./max(abs(WB))))
-    plot(linspace(-pi,pi,Ndtft),log10(abs(WT)./max(abs(WT))),'r--')
-    hold off
-    if nn == 1, legend('bartlett','triang'); end;
-    xlim([-pi,pi])
-    xlabel('\omega (rads)')
-    ylabel('Magnitude (dB)')
-    title(sprintf('DTFT N = %d',N(nn)))
-end
-
-figure
-N = [51 81 101 121];
-for nn = 1:length(N)
-    subplot(length(N),1,nn)
-    WR = fftshift(fft(ones(1,51),Ndtft));
-    WB = fftshift(fft(bartlett(N(nn)),Ndtft));
-    hold on
-    plot(linspace(-pi,pi,Ndtft),log10(abs(WR)./max(abs(WR))))
-    plot(linspace(-pi,pi,Ndtft),log10(abs(WB)./max(abs(WB))),'r--')
-    hold off
-    if nn == 1, legend('bartlett','rect'); end;
-    xlim([-pi/6,pi/6])
-    xlabel('\omega (rads)')
-    ylabel('Magnitude (dB)')
-    title(sprintf('DTFT N = %d',N(nn)))
-end
+title('Estimated PACS')
