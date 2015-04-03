@@ -16,6 +16,9 @@ figure; imagesc(env);
 rfk = rf(400:600,:);
 envk = env(400:600,:);
 
+figure
+imagesc(angle(envk)); colorbar
+
 rfcorr = normxcorr2(rfk./max(rfk(:)),rfk./max(rfk(:)));
 envcorr = normxcorr2(envk./max(envk(:)),envk./max(envk(:)));
 
