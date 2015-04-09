@@ -1,12 +1,12 @@
 clear all; close all; clc;
 
 % load harmonic_ppw25_ba8.mat
-load harmonic_ppw20_ba7.mat
+load harmonic_ppw20_ba8.mat
 % load data_p3.mat
 n = 1:size(rf,1);
-N_fft = 256;
+N_fft = 128;
 
-win = buffer(n,N_fft,round(5*N_fft/6));
+win = buffer(n,N_fft,round(9*N_fft/10));
 [~, j] = find(win == 0);
 j = unique(j);
 win(:,j) = [];
@@ -34,8 +34,8 @@ for i = 1:size(win,2)
         % normalize window at each depth so that energy is not dependent on
         % attenuation of amplitude of echoes
         norm_winfft(:,line) = tmp./max(tmp(:));
-        norm_winfftf0(:,line) = (filt_f0'.*tmp);
-        norm_winfftf1(:,line) = (filt_f1'.*tmp);
+        norm_winfftf0(:,line) = 2.*(filt_f0'.*tmp);
+        norm_winfftf1(:,line) = 2.*(filt_f1'.*tmp);
     end
     tot_winfftf0 = sum(norm_winfftf0,2);
     tot_winfftf1 = sum(norm_winfftf1,2);
@@ -61,11 +61,18 @@ end
 figure
 hold on
 plot(1000.*deps(z_i),f0_E, '-');
-plot(1000.*deps(z_i),f1_E,'r-');
+plot(1000.*deps(z_i),f1_E,'r--');
 hold off
 xlabel('Depth (mm)')
 ylabel('Energy')
 legend('Fundamental','Harmonic')
+print -djpeg ./fig3a_WillieLong.jpg
+
+figure
+plot(1000.*deps(z_i),f1_E,'r--');
+xlabel('Depth (mm)')
+ylabel('Energy')
+print -djpeg ./fig3a_harmonic_WillieLong.jpg
 
 foc=round(nZ/1.3)*dZ
 
@@ -87,18 +94,17 @@ figure
 subplot(131)
 imagesc(1e3*bws,1e3*deps,20*log10(env/max(env(:))),[-40 0]); 
 colormap gray; axis image
-xlabel('mm'); ylabel('mm'); title('Unfiltered')
+xlabel('y (mm)'), ylabel('z (mm)'); title('Unfiltered')
 subplot(132)
 imagesc(1e3*bws,1e3*deps,20*log10(f0_env/max(f0_env(:))),[-40 0]); 
 colormap gray; axis image
-xlabel('mm'); ylabel('mm'); title('Fundamental')
+xlabel('y (mm)'), ylabel('z (mm)'); title('Fundamental')
 subplot(133)
 imagesc(1e3*bws,1e3*deps,20*log10(f1_env/max(f1_env(:))),[-40 0]); 
 colormap gray; axis image
-xlabel('mm'); ylabel('mm'); title('Harmonic')
+xlabel('y (mm)'), ylabel('z (mm)'); title('Harmonic')
 
-% figure
-% imagesc(20*log10(env/max(env(:))),[-40 0]); 
+print -djpeg ./fig3b_WillieLong.jpg
 
 les_i = 1100:1240;
 les_j = 4:7;
