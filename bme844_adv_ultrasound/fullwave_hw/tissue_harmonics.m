@@ -1,7 +1,8 @@
 clear all; close all; clc;
 
-load harmonic_ppw20_ba8.mat
+load harmonic_ppw20_ba7.mat
 % load harmonicfoc_ppw17_ba8.mat
+% load data_p3.mat
 n = 1:size(rf,1);
 N_fft = 128;
 
