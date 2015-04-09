@@ -1,8 +1,7 @@
 clear all; close all; clc;
 
-% load harmonic_ppw25_ba8.mat
 load harmonic_ppw20_ba8.mat
-% load data_p3.mat
+% load harmonicfoc_ppw17_ba8.mat
 n = 1:size(rf,1);
 N_fft = 128;
 
@@ -94,7 +93,7 @@ figure
 subplot(131)
 imagesc(1e3*bws,1e3*deps,20*log10(env/max(env(:))),[-40 0]); 
 colormap gray; axis image
-xlabel('y (mm)'), ylabel('z (mm)'); title('Unfiltered')
+xlabel('y (mm)'), ylabel('z (mm)'); title('Raw')
 subplot(132)
 imagesc(1e3*bws,1e3*deps,20*log10(f0_env/max(f0_env(:))),[-40 0]); 
 colormap gray; axis image
