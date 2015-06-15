@@ -117,7 +117,6 @@ title('Mainlobe Width for Varying N')
 legend('bartlett','rect')
 
 clear WB bwB
-
 % compare dtft of bartlett of varying lengths to rect window with N = 51
 figure
 N = [51 81 101 121];
