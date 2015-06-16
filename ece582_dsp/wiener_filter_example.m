@@ -1,4 +1,5 @@
 I = im2double(imread('cameraman.tif'));
+
 imshow(I);
 title('Original Image (courtesy of MIT)');
 
