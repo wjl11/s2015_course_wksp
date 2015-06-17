@@ -1,5 +1,4 @@
-clear all; clc; 
-close all;
+clear all; clc; close all;
 
 load('./mat_files/hw5_data_full.mat');
 
