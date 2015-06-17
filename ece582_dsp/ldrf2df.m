@@ -14,7 +14,6 @@ function [b,a] = ldr2dir(K,V)
 % McGraw-Hill Higher Education.
 %-----------------------------------------------------------
 
-
 N = length(K); M = length(V);
 V = [V, zeros(1,N-M+1)];
 J = 1; a = 1; A = zeros(N,N);
