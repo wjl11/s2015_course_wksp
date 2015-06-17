@@ -6,7 +6,6 @@ load('./mat_files/hw5_data_full.mat');
 dz = (1/fs)*(1540/2);
 depth = foc_z;
 
-
 rf = rf{10,10};
 env = env{10,10};
 
