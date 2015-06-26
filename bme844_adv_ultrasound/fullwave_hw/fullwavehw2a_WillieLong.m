@@ -249,6 +249,8 @@ pxducer3=pxducer3(:,round(size(pxducer3,2)/3*2+1:size(pxducer3,2)));
 % imagesc(powcompress(pxducer3,1/4))
 
 bm3=zeros(length(lats),length(deps),'single');
+
+keyboard
 tic
 for ii=1:length(lats)
   for jj=1:length(deps)
